@@ -1,0 +1,3 @@
+sudo apt-get install -y gnuplot-x11
+sudo apt-get install -y gnuplot
+sudo apt install octave
