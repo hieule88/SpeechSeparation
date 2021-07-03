@@ -62,7 +62,7 @@ def create_wsj_csv(datapath, savepath):
         "s2_wav_opts",
     ]
     # 
-    with open(savepath + "/wav16k" + ".csv", "w") as csvfile:
+    with open(savepath + "/zalo" + ".csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
         writer.writeheader()
         for i, (mix_path, s1_path, s2_path) in enumerate(

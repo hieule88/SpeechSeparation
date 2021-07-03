@@ -142,7 +142,7 @@ class Separation(sb.Brain):
                 mixture, targets, sb.Stage.TRAIN, noise
             )
             loss = self.compute_objectives(predictions, targets)
-
+            
             if self.hparams.threshold_byloss:
                 th = self.hparams.threshold
                 loss_to_keep = loss[loss > th]
@@ -450,10 +450,10 @@ def dataio_prep(hparams):
         replacements={"data_root": hparams["data_folder"]},
     )
 
-    # valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-    #     csv_path=hparams["valid_data"],
-    #     replacements={"data_root": hparams["data_folder"]},
-    # )
+    valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
+        csv_path=hparams["valid_data"],
+        replacements={"data_root": hparams["data_folder"]},
+    )
 
     # test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
     #     csv_path=hparams["test_data"],
@@ -461,7 +461,7 @@ def dataio_prep(hparams):
     # )
 
     # datasets = [train_data, valid_data, test_data]
-    datasets = [train_data]
+    datasets = [train_data, valid_data]
 
     # 2. Provide audio pipelines
 
