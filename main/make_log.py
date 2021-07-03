@@ -16,16 +16,13 @@ def signaltonoise(a, axis=0, ddof=0):
     sd = a.std(axis = axis, ddof = ddof)
     return np.where(sd == 0, 0, m / sd)
 
-root_path = os.path.dirname(os.path.realpath(__file__))
+root_path = os.getcwd()
+root_path = root_path.split("/")
+root_path = "/".join(root_path[:-2])
 
 data_path = os.path.join(root_path, 'dataset', 'zalo2spk')
 log_path = os.path.join(root_path, 'dataset', 'mix_2_spk.txt')
 s1_files = os.listdir(os.path.join(data_path, 's1'))
-
-print(s1_files[1])
-au = load_wav(os.path.join(data_path, 's1' ,s1_files[1]))
-
-snr = signaltonoise(au)
 
 type_file = ['s1', 's2']
 with open(log_path, "w") as fid:
