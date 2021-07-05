@@ -12,7 +12,9 @@ import numpy as np
 from tqdm import tqdm
 import csv
 import logging
-
+from speechbrain.utils.checkpoints import Checkpointer
+import matplotlib.pyplot as plt
+import time
 
 # Define training procedure
 class Separation(sb.Brain):
@@ -224,7 +226,22 @@ class Separation(sb.Brain):
             )
             self.checkpointer.save_and_keep_only(
                 meta={"si-snr": stage_stats["si-snr"]}, min_keys=["si-snr"],
+                num_to_keep =5,
             )
+            if (epoch == 1) :
+                self.train_losses = []
+                self.valid_losses = []
+                
+            self.train_losses.append(self.train_stats["si-snr"])
+            self.valid_losses.append(stage_stats["si-snr"])
+            plt.plot(self.train_losses)
+            plt.plot(self.valid_losses)
+
+            if (epoch %5 == 0): 
+                plt.savefig(os.path.join(self.hparams.save_folder, "log" ,"time_%d_epoch%d.png" % 
+                (time.strftime("%Y-%m-%d %H-%M-%S", time.localtime()), epoch)), dpi = 150) 
+
+
         elif stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
                 stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
@@ -519,7 +536,7 @@ def dataio_prep(hparams):
                 datasets, ["id", "mix_sig", "s1_sig", "s2_sig"]
             )
 
-    return train_data
+    return train_data, valid_data
 
 
 if __name__ == "__main__":
@@ -561,7 +578,6 @@ if __name__ == "__main__":
             "skip_prep": hparams["skip_prep"],
         },
     )
-
     # Create dataset objects
     if hparams["dynamic_mixing"]:
 
@@ -579,7 +595,7 @@ if __name__ == "__main__":
             )
         _, valid_data, test_data = dataio_prep(hparams)
     else:
-        train_data = dataio_prep(hparams)
+        train_data, valid_data = dataio_prep(hparams)
 
     # Brain class initialization
     separator = Separation(
@@ -604,6 +620,6 @@ if __name__ == "__main__":
             valid_loader_kwargs=hparams["dataloader_opts"],
         )
 
-    # Eval
-    separator.evaluate(test_data, min_key="si-snr")
-    separator.save_results(test_data)
+    # # Eval
+    # separator.evaluate(test_data, min_key="si-snr")
+    # separator.save_results(test_data)

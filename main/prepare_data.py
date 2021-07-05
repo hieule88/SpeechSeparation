@@ -39,7 +39,7 @@ def create_wsj_csv(datapath, savepath):
     # tr: train; cv: valid; tt: test
     mix_path = os.path.join(datapath, "wav16k" , "max", "mix/")
     s1_path = os.path.join(datapath, "wav16k", "max", "s1/")
-    s2_path = os.path.join(datapath, "wav16k", "max" "s2/")
+    s2_path = os.path.join(datapath, "wav16k", "max", "s2/")
 
     # ten cac file trong mix,s1,s2 giong nhau
     files = os.listdir(mix_path)
