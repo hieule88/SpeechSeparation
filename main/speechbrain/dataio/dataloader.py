@@ -97,7 +97,7 @@ def make_dataloader(dataset, **loader_kwargs):
     # Create the loader
     if isinstance(dataset, IterableDataset):
         dataloader = DataLoader(dataset, **loader_kwargs)
-    else:
+    else:   
         dataloader = SaveableDataLoader(dataset, **loader_kwargs)
     return dataloader
 

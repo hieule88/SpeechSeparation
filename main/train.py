@@ -15,13 +15,14 @@ import logging
 from speechbrain.utils.checkpoints import Checkpointer
 import matplotlib.pyplot as plt
 import time
-
+from torchsummary import summary
 # Define training procedure
 class Separation(sb.Brain):
     def compute_forward(self, mix, targets, stage, noise=None):
         """Forward computations from the mixture to the separated signals."""
 
         # Unpack lists and put tensors in the right device
+
         mix, mix_lens = mix
         mix, mix_lens = mix.to(self.device), mix_lens.to(self.device)
 
@@ -30,13 +31,13 @@ class Separation(sb.Brain):
             [targets[i][0].unsqueeze(-1) for i in range(self.hparams.num_spks)],
             dim=-1,
         ).to(self.device)
-
+        
         # Add speech distortions
         if stage == sb.Stage.TRAIN:
             with torch.no_grad():
                 if self.hparams.use_speedperturb or self.hparams.use_rand_shift:
                     mix, targets = self.add_speed_perturb(targets, mix_lens)
-
+                    
                     if "whamr" in self.hparams.data_folder:
                         targets = self.hparams.reverb(
                             targets[0].t(), torch.ones(targets.size(-1))
@@ -61,13 +62,24 @@ class Separation(sb.Brain):
 
                 if self.hparams.limit_training_signal_len:
                     mix, targets = self.cut_signals(mix, targets)
-
+                
         # Separation
+        
         mix_w = self.hparams.Encoder(mix)
+
+
         est_mask = self.hparams.MaskNet(mix_w)
+       
+
+
+        # LARGE PARAMS HERE
+    
+
+
+
         mix_w = torch.stack([mix_w] * self.hparams.num_spks)
         sep_h = mix_w * est_mask
-
+        
         # Decoding
         est_source = torch.cat(
             [
@@ -94,6 +106,7 @@ class Separation(sb.Brain):
     def fit_batch(self, batch):
         """Trains one batch"""
         # Unpacking batch list
+
         mixture = batch.mix_sig
         targets = [batch.s1_sig, batch.s2_sig]
         if "wham" in self.hparams.data_folder:
@@ -140,9 +153,11 @@ class Separation(sb.Brain):
                 )
                 loss.data = torch.tensor(0).to(self.device)
         else:
+            
             predictions, targets = self.compute_forward(
                 mixture, targets, sb.Stage.TRAIN, noise
             )
+
             loss = self.compute_objectives(predictions, targets)
             
             if self.hparams.threshold_byloss:
@@ -238,7 +253,7 @@ class Separation(sb.Brain):
             plt.plot(self.valid_losses)
 
             if (epoch %5 == 0): 
-                plt.savefig(os.path.join(self.hparams.save_folder, "log" ,"time_%d_epoch%d.png" % 
+                plt.savefig(os.path.join(self.hparams.save_folder, "log" ,"time_%s_epoch%d.png" % 
                 (time.strftime("%Y-%m-%d %H-%M-%S", time.localtime()), epoch)), dpi = 150) 
 
 
@@ -612,6 +627,16 @@ if __name__ == "__main__":
 
     if not hparams["test_only"]:
         # Training
+        # run_on_main(
+        #     separator.fit,
+        #     kwargs = {
+        #         "epoch_counter": separator.hparams.epoch_counter,
+        #         "train_set": train_data,
+        #         "valid_set": valid_data,
+        #         "train_loader_kwargs": hparams["dataloader_opts"],
+        #         "valid_loader_kwargs": hparams["dataloader_opts"],
+        #     },
+        # )
         separator.fit(
             separator.hparams.epoch_counter,
             train_data,

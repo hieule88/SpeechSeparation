@@ -20,8 +20,8 @@ root_path = os.getcwd()
 root_path = root_path.split("/")
 root_path = "/".join(root_path[:-2])
 
-data_path = os.path.join(root_path, 'dataset', 'zalo2spk')
-log_path = os.path.join(root_path, 'dataset', 'mix_2_spk.txt')
+data_path = os.path.join(root_path, 'dataset', 'test')
+log_path = os.path.join(root_path, 'dataset', 'mix_2_spk_vd.txt')
 s1_files = os.listdir(os.path.join(data_path, 's1'))
 
 type_file = ['s1', 's2']

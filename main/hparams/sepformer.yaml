@@ -12,14 +12,14 @@ data_folder: /storage/hieuld/SpeechSeparation/dataset
 
 # the path for wsj0/si_tr_s/ folder -- only needed if dynamic mixing is used
 # e.g. /yourpath/wsj0-processed/si_tr_s/
-wsj0_tr: /yourpath/wsj0-processed/si_tr_s/
+# wsj0_tr: /yourpath/wsj0-processed/si_tr_s/
 
 experiment_name: sepformer
 output_folder: /storage/hieuld/SpeechSeparation/dataset/output_folder
 train_log: !ref <output_folder>/train_log.txt
 save_folder: !ref <output_folder>/save
 train_data: !ref <save_folder>/zalo.csv
-valid_data: !ref <save_folder>/zalo.csv
+valid_data: !ref <save_folder>/zalo_vd.csv
 test_data: !ref <save_folder>/zalo_tt.csv
 skip_prep: False
 
@@ -34,7 +34,7 @@ sample_rate: 16000
 
 # Training parameters
 N_epochs: 200
-batch_size: 2
+batch_size: 1
 lr: 0.00015
 clip_grad_norm: 5
 loss_upper_lim: 999999  # this is the upper limit for an acceptable loss
