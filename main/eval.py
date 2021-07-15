@@ -17,14 +17,10 @@ import matplotlib.pyplot as plt
 import time
 from torchsummary import summary
 # Define training procedure
-train_losses = []
-valid_losses = []
 class Separation(sb.Brain):
     def compute_forward(self, mix, targets, stage, noise=None):
         """Forward computations from the mixture to the separated signals."""
-
         # Unpack lists and put tensors in the right device
-
         mix, mix_lens = mix
         mix, mix_lens = mix.to(self.device), mix_lens.to(self.device)
 
@@ -33,51 +29,14 @@ class Separation(sb.Brain):
             [targets[i][0].unsqueeze(-1) for i in range(self.hparams.num_spks)],
             dim=-1,
         ).to(self.device)
-        
-        # Add speech distortions
-        if stage == sb.Stage.TRAIN:
-            with torch.no_grad():
-                if self.hparams.use_speedperturb or self.hparams.use_rand_shift:
-                    mix, targets = self.add_speed_perturb(targets, mix_lens)
-                    
-                    if "whamr" in self.hparams.data_folder:
-                        targets = self.hparams.reverb(
-                            targets[0].t(), torch.ones(targets.size(-1))
-                        )
-                        targets = targets.t().unsqueeze(0)
-                        mix = targets.sum(-1)
-
-                    if "wham" in self.hparams.data_folder:
-                        noise = noise.to(self.device)
-                        len_noise = noise.shape[1]
-                        len_mix = mix.shape[1]
-                        min_len = min(len_noise, len_mix)
-
-                        # add the noise
-                        mix = mix[:, :min_len] + noise[:, :min_len]
-
-                        # fix the length of targets also
-                        targets = targets[:, :min_len, :]
-
-                if self.hparams.use_wavedrop:
-                    mix = self.hparams.wavedrop(mix, mix_lens)
-
-                if self.hparams.limit_training_signal_len:
-                    mix, targets = self.cut_signals(mix, targets)
                 
         # Separation
         
         mix_w = self.hparams.Encoder(mix)
 
-
         est_mask = self.hparams.MaskNet(mix_w)
        
-
-
         # LARGE PARAMS HERE
-    
-
-
 
         mix_w = torch.stack([mix_w] * self.hparams.num_spks)
         sep_h = mix_w * est_mask
@@ -218,101 +177,12 @@ class Separation(sb.Brain):
         """Gets called at the end of a epoch."""
         # Compute/store important stats
         stage_stats = {"si-snr": stage_loss}
-        if stage == sb.Stage.TRAIN:
-            self.train_stats = stage_stats
 
-        # Perform end-of-iteration things, like annealing, logging, etc.
-        if stage == sb.Stage.VALID:
-
-            # Learning rate annealing
-            if isinstance(
-                self.hparams.lr_scheduler, schedulers.ReduceLROnPlateau
-            ):
-                current_lr, next_lr = self.hparams.lr_scheduler(
-                    [self.optimizer], epoch, stage_loss
-                )
-                schedulers.update_learning_rate(self.optimizer, next_lr)
-            else:
-                # if we do not use the reducelronplateau, we do not change the lr
-                current_lr = self.hparams.optimizer.optim.param_groups[0]["lr"]
-
-            self.hparams.train_logger.log_stats(
-                stats_meta={"epoch": epoch, "lr": current_lr},
-                train_stats=self.train_stats,
-                valid_stats=stage_stats,
-            )
-            self.checkpointer.save_and_keep_only(
-                meta={"si-snr": stage_stats["si-snr"]}, min_keys=["si-snr"],
-                num_to_keep =5,
-            )
-            
-            global train_losses
-            global valid_losses 
-            train_losses.append(self.train_stats["si-snr"])
-            valid_losses.append(stage_stats["si-snr"])
-            plt.plot(train_losses)
-            plt.plot(valid_losses)
-
-            if (epoch %5 == 0): 
-                plt.savefig(os.path.join(self.hparams.save_folder, "log" ,"time_%s_epoch%d.png" % 
-                (time.strftime("%Y-%m-%d %H-%M-%S", time.localtime()), epoch)), dpi = 150) 
-
-
-        elif stage == sb.Stage.TEST:
+        if stage == sb.Stage.TEST:
             self.hparams.train_logger.log_stats(
                 stats_meta={"Epoch loaded": self.hparams.epoch_counter.current},
                 test_stats=stage_stats,
             )
-
-    def add_speed_perturb(self, targets, targ_lens):
-        """Adds speed perturbation and random_shift to the input signals"""
-
-        min_len = -1
-        recombine = False
-
-        if self.hparams.use_speedperturb:
-            # Performing speed change (independently on each source)
-            new_targets = []
-            recombine = True
-
-            for i in range(targets.shape[-1]):
-                new_target = self.hparams.speedperturb(
-                    targets[:, :, i], targ_lens
-                )
-                new_targets.append(new_target)
-                if i == 0:
-                    min_len = new_target.shape[-1]
-                else:
-                    if new_target.shape[-1] < min_len:
-                        min_len = new_target.shape[-1]
-
-            if self.hparams.use_rand_shift:
-                # Performing random_shift (independently on each source)
-                recombine = True
-                for i in range(targets.shape[-1]):
-                    rand_shift = torch.randint(
-                        self.hparams.min_shift, self.hparams.max_shift, (1,)
-                    )
-                    new_targets[i] = new_targets[i].to(self.device)
-                    new_targets[i] = torch.roll(
-                        new_targets[i], shifts=(rand_shift[0],), dims=1
-                    )
-
-            # Re-combination
-            if recombine:
-                if self.hparams.use_speedperturb:
-                    targets = torch.zeros(
-                        targets.shape[0],
-                        min_len,
-                        targets.shape[-1],
-                        device=targets.device,
-                        dtype=torch.float,
-                    )
-                for i, new_target in enumerate(new_targets):
-                    targets[:, :, i] = new_targets[i][:, 0:min_len]
-
-        mix = targets.sum(-1)
-        return mix, targets
 
     def cut_signals(self, mixture, targets):
         """This function selects a random segment of a given length within the mixture.
@@ -478,23 +348,15 @@ def dataio_prep(hparams):
     """Creates data processing pipeline"""
 
     # 1. Define datasets
-    train_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["train_data"],
+
+
+    test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
+        csv_path=hparams["test_data"],
         replacements={"data_root": hparams["data_folder"]},
     )
-
-    valid_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-        csv_path=hparams["valid_data"],
-        replacements={"data_root": hparams["data_folder"]},
-    )
-
-    # test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-    #     csv_path=hparams["test_data"],
-    #     replacements={"data_root": hparams["data_folder"]},
-    # )
 
     # datasets = [train_data, valid_data, test_data]
-    datasets = [train_data, valid_data]
+    datasets = [test_data]
 
     # 2. Provide audio pipelines
 
@@ -552,7 +414,7 @@ def dataio_prep(hparams):
                 datasets, ["id", "mix_sig", "s1_sig", "s2_sig"]
             )
 
-    return train_data, valid_data
+    return test_data
 
 
 if __name__ == "__main__":
@@ -575,25 +437,7 @@ if __name__ == "__main__":
         overrides=overrides,
     )
 
-    # Check if wsj0_tr is set with dynamic mixing
-    if hparams["dynamic_mixing"] and not os.path.exists(hparams["wsj0_tr"]):
-        print(
-            "Please, specify a valid wsj0_tr folder when using dynamic mixing"
-        )
-        sys.exit(1)
-
     # Data preparation
-    from prepare_data import prepare_wsjmix  # noqa
-
-    run_on_main(
-        prepare_wsjmix,
-        kwargs={
-            "datapath": hparams["data_folder"],
-            "savepath": hparams["save_folder"],
-            "n_spks": hparams["num_spks"],
-            "skip_prep": hparams["skip_prep"],
-        },
-    )
 
     import prepare_valid
     run_on_main(
@@ -606,23 +450,8 @@ if __name__ == "__main__":
         },
     )
     # Create dataset objects
-    if hparams["dynamic_mixing"]:
 
-        if hparams["num_spks"] == 2:
-            from separation.dynamic_mixing import dynamic_mix_data_prep  # noqa
-
-            train_data = dynamic_mix_data_prep(hparams)
-        elif hparams["num_spks"] == 3:
-            from separation.dynamic_mixing import dynamic_mix_data_prep_3mix  # noqa
-
-            train_data = dynamic_mix_data_prep_3mix(hparams)
-        else:
-            raise ValueError(
-                "The specified number of speakers is not supported."
-            )
-        _, valid_data, test_data = dataio_prep(hparams)
-    else:
-        train_data, valid_data = dataio_prep(hparams)
+    test_data = dataio_prep(hparams)
 
     # Brain class initialization
     separator = Separation(
@@ -634,29 +463,8 @@ if __name__ == "__main__":
     )
 
     # re-initialize the parameters
-    for module in separator.modules.values():
-        separator.reset_layer_recursively(module)
 
-    if not hparams["test_only"]:
-        # Training
-        # run_on_main(
-        #     separator.fit,
-        #     kwargs = {
-        #         "epoch_counter": separator.hparams.epoch_counter,
-        #         "train_set": train_data,
-        #         "valid_set": valid_data,
-        #         "train_loader_kwargs": hparams["dataloader_opts"],
-        #         "valid_loader_kwargs": hparams["dataloader_opts"],
-        #     },
-        # )
-        separator.fit(
-            separator.hparams.epoch_counter,
-            train_data,
-            valid_data,
-            train_loader_kwargs=hparams["dataloader_opts"],
-            valid_loader_kwargs=hparams["dataloader_opts"],
-        )
+    # Eval
+    separator.evaluate(test_data, min_key="si-snr")
+    separator.save_results(test_data)
 
-    # # Eval
-    # separator.evaluate(test_data, min_key="si-snr")
-    # separator.save_results(test_data)

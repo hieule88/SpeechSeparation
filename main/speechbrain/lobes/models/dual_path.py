@@ -1049,7 +1049,7 @@ class Dual_Path_Model(nn.Module):
         super(Dual_Path_Model, self).__init__()
         self.K = K
         self.num_spks = num_spks
-        self.num_layers = 1
+        self.num_layers = num_layers
         self.norm = select_norm(norm, in_channels, 3)
         self.conv1d = nn.Conv1d(in_channels, out_channels, 1, bias=False)
         self.use_global_pos_enc = use_global_pos_enc

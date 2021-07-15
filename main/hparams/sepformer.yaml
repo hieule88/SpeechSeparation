@@ -8,14 +8,14 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # e.g. '/yourpath/wsj0-mix/2speakers'
 # end with 2speakers for wsj0-2mix or 3speakers for wsj0-3mix
-data_folder: /storage/hieuld/SpeechSeparation/dataset
+data_folder: /home/SpeechSeparation/dataset
 
 # the path for wsj0/si_tr_s/ folder -- only needed if dynamic mixing is used
 # e.g. /yourpath/wsj0-processed/si_tr_s/
 # wsj0_tr: /yourpath/wsj0-processed/si_tr_s/
 
 experiment_name: sepformer
-output_folder: /storage/hieuld/SpeechSeparation/dataset/output_folder
+output_folder: /home/SpeechSeparation/dataset/output_folder
 train_log: !ref <output_folder>/train_log.txt
 save_folder: !ref <output_folder>/save
 train_data: !ref <save_folder>/zalo.csv
