@@ -2,7 +2,6 @@ from flask import Flask, request, render_template, send_file
 import flask
 import utils 
 import torchaudio
-import io
 import os 
 import zipfile
 # khoi tao model

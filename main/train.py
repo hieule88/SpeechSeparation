@@ -15,7 +15,6 @@ import logging
 from speechbrain.utils.checkpoints import Checkpointer
 import matplotlib.pyplot as plt
 import time
-from torchsummary import summary
 # Define training procedure
 train_losses = []
 valid_losses = []
