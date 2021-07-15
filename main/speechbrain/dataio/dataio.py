@@ -20,7 +20,25 @@ import time
 import torchaudio
 import json
 import re
-from speechbrain.utils.torch_audio_backend import get_torchaudio_backend
+import platform
+
+
+def get_torchaudio_backend():
+    """Get the backend for torchaudio between soundfile and sox_io according to the os.
+
+    Allow users to use soundfile or sox_io according to their os.
+
+    Returns
+    -------
+    str
+        The torchaudio backend to use.
+    """
+    current_system = platform.system()
+    if current_system == "Windows":
+        return "soundfile"
+    else:
+        return "sox_io"
+
 
 torchaudio_backend = get_torchaudio_backend()
 torchaudio.set_audio_backend(torchaudio_backend)
@@ -313,6 +331,7 @@ def write_audio(filepath, audio, samplerate):
     >>> loaded.allclose(dummywav,atol=1e-4) # replace with eq with sox_io backend
     True
     """
+    audio = torch.from_numpy(audio)
     if len(audio.shape) == 2:
         audio = audio.transpose(0, 1)
     elif len(audio.shape) == 1:

@@ -663,6 +663,7 @@ class Brain:
         # TRAIN stage is handled specially.
         if stage == sb.Stage.TRAIN:
             loader_kwargs = self._train_loader_specifics(dataset, loader_kwargs)
+
         dataloader = sb.dataio.dataloader.make_dataloader(
             dataset, **loader_kwargs
         )
@@ -825,6 +826,7 @@ class Brain:
         detached loss
         """
         # Managing automatic mixed precision
+
         if self.auto_mix_prec:
             self.optimizer.zero_grad()
             with torch.cuda.amp.autocast():
@@ -845,6 +847,7 @@ class Brain:
 
         return loss.detach().cpu()
 
+        
     def check_gradients(self, loss):
         """Check if gradients are finite and not too large.
 
@@ -976,9 +979,9 @@ class Brain:
                 ckpt_prefix=None,
                 **valid_loader_kwargs,
             )
-
+        
         self.on_fit_start()
-
+        
         if progressbar is None:
             progressbar = not self.noprogressbar
 
@@ -1011,11 +1014,13 @@ class Brain:
                 for batch in t:
                     self.step += 1
                     loss = self.fit_batch(batch)
+                    
                     self.avg_train_loss = self.update_average(
                         loss, self.avg_train_loss
                     )
-                    t.set_postfix(train_loss=self.avg_train_loss)
 
+                    t.set_postfix(train_loss=self.avg_train_loss)
+                    
                     # Debug mode only runs a few batches
                     if self.debug and self.step == self.debug_batches:
                         break

@@ -1,30 +1,33 @@
+from genericpath import exists
 import os
-import glob
-import random
-import tqdm
-from scipy.io import wavfile
-from ultis.dataio import read_audio
-import torch
 import torchaudio
+from speechbrain.dataio.dataio import read_audio
+import tqdm
+import shutil
+from scipy import signal
 
-root_path = os.path.dirname(os.path.realpath(__file__))
+root_path = os.getcwd()
+root_path = root_path.split('/')
+root_path = '/'.join(root_path[:-2])
 
-path_wav = [os.path.join(root_path, 'dataset', 'zalo2spk', 's2')]
-for path in path_wav:
-    files = glob.glob(path + '/*.wav', recursive=True)
+root_path = os.path.join(root_path, 'dataset', 'test')
+mix_csv = os.path.join(root_path, 'public-test.csv')
+wav_file = os.path.join(root_path, 'public-test')
 
-    for i in tqdm.tqdm(range(len(files))):
-        fs = read_audio(files[i])
-        if len(fs.size()) > 1:
-            wav, _ = torchaudio.load(files[i])
+# os.makedirs(os.path.join(root_path,'s1'), exist_ok= True)
+# os.makedirs(os.path.join(root_path,'s2'), exist_ok= True)
+s1_files = os.path.join(root_path, 's1')
+s2_files = os.path.join(root_path, 's2')
 
-            wav_new = torch.Tensor(1, wav.shape[1])
+s1_paths = os.listdir(s1_files)
+s2_paths = os.listdir(s2_files)
 
-            for j in range(wav.shape[1]):
-                wav_new[0][j] = (wav[0][j] + wav[1][j]) /2 
-            # print(wav_new.shape)
-            # torchaudio.save(files[i], wav_new,_ )
-        
-    #     count = count + 1
-    #     os.rename(files[i],os.path.join(path, '2mixed_' + str(count-1) +'.wav'))
+paths_s1 = [os.path.join(s1_files, p) for p in s1_paths]
+paths_s2 = [os.path.join(s2_files, p) for p in s2_paths]
 
+fs_read = 16000
+for i in range(len(paths_s2)):
+    s1 , _ = torchaudio.load(paths_s2[i])
+    if (s1.shape[0] == 2):
+        print(paths_s2[i])
+        exit(0)

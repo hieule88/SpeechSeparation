@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from tqdm import tqdm
-from ultis.dataio import read_audio, write_audio
+from speechbrain.dataio.dataio import read_audio, write_audio
 from scipy.io import wavfile
 from scipy import signal
 import pickle
@@ -39,7 +39,7 @@ def create_wsj_csv(datapath, savepath):
     # tr: train; cv: valid; tt: test
     mix_path = os.path.join(datapath, "wav16k" , "max", "mix/")
     s1_path = os.path.join(datapath, "wav16k", "max", "s1/")
-    s2_path = os.path.join(datapath, "wav16k", "max" "s2/")
+    s2_path = os.path.join(datapath, "wav16k", "max", "s2/")
 
     # ten cac file trong mix,s1,s2 giong nhau
     files = os.listdir(mix_path)
@@ -62,7 +62,7 @@ def create_wsj_csv(datapath, savepath):
         "s2_wav_opts",
     ]
     # 
-    with open(savepath + "/wav16k" + ".csv", "w") as csvfile:
+    with open(savepath + "/zalo" + ".csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
         writer.writeheader()
         for i, (mix_path, s1_path, s2_path) in enumerate(
@@ -311,10 +311,12 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
 
     from oct2py import octave
 
-    filedir = os.path.dirname(os.path.realpath(__file__))
+    filedir = os.getcwd()
+    filedir = filedir.split("/")
+    filedir = "/".join(filedir[:-2])
 
     octave.addpath(
-        filedir + "/meta"
+        filedir +"/SpeechSeparation/main/meta"
     )  # add the matlab functions to octave dir here
 
     fs_read = 16000 if save_fs == "wav16k" else 8000
@@ -475,5 +477,10 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
 
 
 if __name__ == "__main__":
-    datapath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset')
-    get_wsj_files(datapath)
+    root = os.getcwd()
+    print(root)
+    root = root.split('/')
+    root = '/'.join(root[:-2])
+    data_path = os.path.join(root, "dataset")
+    print(data_path)
+    get_wsj_files(data_path)

@@ -1058,6 +1058,7 @@ class Dual_Path_Model(nn.Module):
             self.pos_enc = PositionalEncoding(max_length)
 
         self.dual_mdl = nn.ModuleList([])
+
         for i in range(num_layers):
             self.dual_mdl.append(
                 copy.deepcopy(
@@ -1119,9 +1120,11 @@ class Dual_Path_Model(nn.Module):
         # [B, N, K, S]
         x, gap = self._Segmentation(x, self.K)
 
+
         # [B, N, K, S]
         for i in range(self.num_layers):
             x = self.dual_mdl[i](x)
+ 
         x = self.prelu(x)
 
         # [B, N*spks, K, S]
@@ -1134,7 +1137,7 @@ class Dual_Path_Model(nn.Module):
         # [B*spks, N, L]
         x = self._over_add(x, gap)
         x = self.output(x) * self.output_gate(x)
-
+ 
         # [B*spks, N, L]
         x = self.end_conv1x1(x)
 
@@ -1142,7 +1145,7 @@ class Dual_Path_Model(nn.Module):
         _, N, L = x.shape
         x = x.view(B, self.num_spks, N, L)
         x = self.activation(x)
-
+  
         # [spks, B, N, L]
         x = x.transpose(0, 1)
 
@@ -1201,10 +1204,12 @@ class Dual_Path_Model(nn.Module):
         # [B, N, K, S]
         input1 = input[:, :, :-P].contiguous().view(B, N, -1, K)
         input2 = input[:, :, P:].contiguous().view(B, N, -1, K)
+        # input1 = input1.cpu()
+        # input2 = input2.cpu()
         input = (
             torch.cat([input1, input2], dim=3).view(B, N, -1, K).transpose(2, 3)
         )
-
+        # input = input.to(device = "cuda")
         return input.contiguous(), gap
 
     def _over_add(self, input, gap):
