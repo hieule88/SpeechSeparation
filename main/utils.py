@@ -150,5 +150,6 @@ def _load_model():
     return model
 
 if __name__ == "__main__":
-    _load_model()
-    print(_process().shape)
+    model = _load_model()
+    wav_file = ""
+    print(_process(wav_file, model).shape)
