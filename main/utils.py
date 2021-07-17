@@ -1,5 +1,6 @@
 import librosa as lib
 import torch
+import torchaudio
 import torch.nn.functional as F
 import sys
 import speechbrain as sb
@@ -158,4 +159,7 @@ def _load_model():
 if __name__ == "__main__":
     model = _load_model()
     wav_file = "/home/SpeechSeparation/test_wav/mix.wav"
-    print(_process(wav_file, model).shape)
+    separated = _process(wav_file, model)
+    torchaudio.save("/home/SpeechSeparation/test_wav/mix_spk1.wav" , separated[:, :, 0].cpu(), 16000)
+    torchaudio.save("/home/SpeechSeparation/test_wav/mix_spk2.wav" , separated[:, :, 1].cpu(), 16000)
+
