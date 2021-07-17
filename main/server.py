@@ -37,8 +37,10 @@ def get_prediction():
                                     ,'w', compression = zipfile.ZIP_STORED)
 
         for i in range(2):
+            signal = separated[0, :, i]
+            signal = signal / signal.abs().max()
             torchaudio.save(os.path.join(dns_home, 'static/separated',_file.filename + '_Speaker_' + str(i+1)), 
-                                separated[0], sample_rate = 16000)
+                                signal.unsqueeze(0).cpu(), sample_rate = 16000)
             zipfolder.write(os.path.join(dns_home, 'static/separated',_file.filename + '_Speaker_' + str(i+1)))
         zipfolder.close() 
         
