@@ -128,9 +128,10 @@ def _process(file_wav, model):
         wav = wav[: max_len]
     elif len_input < max_len :
         wav = padding(wav)
-    wav = (wav, 2)
+    num_wav = torch.Tensor((2))
+    wav = (wav, num_wav)
 
-    zero_targer = [[0],[0]]
+    zero_targer = [[0,0],[0,0]]
     with torch.no_grad():
         separated, zero_targer = model.compute_forward(wav, zero_targer)
     return separated
