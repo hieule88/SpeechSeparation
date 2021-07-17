@@ -128,14 +128,17 @@ def _process(file_wav, model):
         wav = wav[: max_len]
     elif len_input < max_len :
         wav = padding(wav)
+    wav = torch.FloatTensor(wav)
+    wav = wav.unsqueeze(0)
     num_wav = torch.Tensor((2))
     wav = (wav, num_wav)
+    
     s1 = torch.Tensor((0,0))
     s2 = s1
     zero_targer = [s1,s2]
 
     with torch.no_grad():
-        separated, zero_targer = model.compute_forward(wav, zero_targer)
+        separated, zero_targer = model.compute_forward(wav, zero_targer, stage = sb.Stage.TEST)
     return separated
 
 def _load_model():
@@ -154,5 +157,5 @@ def _load_model():
 
 if __name__ == "__main__":
     model = _load_model()
-    wav_file = ""
+    wav_file = "/home/SpeechSeparation/test_wav/mix.wav"
     print(_process(wav_file, model).shape)
