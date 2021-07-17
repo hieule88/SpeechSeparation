@@ -130,8 +130,10 @@ def _process(file_wav, model):
         wav = padding(wav)
     num_wav = torch.Tensor((2))
     wav = (wav, num_wav)
+    s1 = torch.Tensor((0,0))
+    s2 = s1
+    zero_targer = [s1,s2]
 
-    zero_targer = [[0,0],[0,0]]
     with torch.no_grad():
         separated, zero_targer = model.compute_forward(wav, zero_targer)
     return separated
