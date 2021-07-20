@@ -140,23 +140,6 @@ def save_mixture(
 
         s1 = s1[:mix_len]
         s2 = s2[:mix_len]
-    
-    
-    if save_fs == "wav8k" :
-        const_len = 8000*3
-    else :
-        const_len =16000*3
-
-    if s1.shape[0] > const_len :
-        s1 = s1[:const_len]
-        s2 = s2[:const_len]
-    else :
-        s1 = np.pad(
-            s1, (0, const_len - s1.shape[0]), "constant", constant_values=(0, 0),
-        )
-        s2 = np.pad(
-            s2, (0, const_len - s2.shape[0]), "constant", constant_values=(0, 0),
-        )
 
     mix = s1 + s2
 
