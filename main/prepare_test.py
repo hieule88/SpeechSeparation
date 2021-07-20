@@ -1,11 +1,25 @@
 import os
 import numpy as np
-from tqdm import tqdm
 from speechbrain.dataio.dataio import read_audio, write_audio
 from scipy import signal
 import pickle
 import csv
 import torchaudio
+import os
+import numpy as np
+from numpy.lib.npyio import load
+import librosa
+import tqdm
+
+def load_wav(path):
+    signal, sr = librosa.load(path)
+    return signal
+
+def signaltonoise(a, axis=0, ddof=0):
+    a = np.asanyarray(a)
+    m = a.mean(axis)
+    sd = a.std(axis = axis, ddof = ddof)
+    return np.where(sd == 0, 0, m / sd)
 
 def prepare_wsjmix(datapath, savepath, n_spks=2, skip_prep=False):
     """
@@ -22,9 +36,6 @@ def prepare_wsjmix(datapath, savepath, n_spks=2, skip_prep=False):
         return
     if n_spks == 2:
         create_wsj_csv(datapath, savepath)
-    if n_spks == 3:
-        create_wsj_csv_3spks(datapath, savepath)
-
 
 # load or create the csv files for the data
 def create_wsj_csv(datapath, savepath):
@@ -36,9 +47,9 @@ def create_wsj_csv(datapath, savepath):
         savepath (str) : path where we save the csv file
     """
     # tr: train; cv: valid; tt: test
-    mix_path = os.path.join(datapath, "wav16k_vd" , "max", "mix/")
-    s1_path = os.path.join(datapath, "wav16k_vd", "max", "s1/")
-    s2_path = os.path.join(datapath, "wav16k_vd", "max", "s2/")
+    mix_path = os.path.join(datapath, "wav16k_tt" , "max", "mix/")
+    s1_path = os.path.join(datapath, "wav16k_tt", "max", "s1/")
+    s2_path = os.path.join(datapath, "wav16k_tt", "max", "s2/")
 
     # ten cac file trong mix,s1,s2 giong nhau
     files = os.listdir(mix_path)
@@ -61,7 +72,7 @@ def create_wsj_csv(datapath, savepath):
         "s2_wav_opts",
     ]
     # 
-    with open(savepath + "/zalo_vd" + ".csv", "w") as csvfile:
+    with open(savepath + "/vivos_tt" + ".csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
         writer.writeheader()
         for i, (mix_path, s1_path, s2_path) in enumerate(
@@ -70,7 +81,7 @@ def create_wsj_csv(datapath, savepath):
 
             row = {
                 "ID": i,
-                "duration": 3.0,
+                "duration": 1.0,
                 "mix_wav": mix_path,
                 "mix_wav_format": "wav",
                 "mix_wav_opts": None,
@@ -165,7 +176,7 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
-        + "_vd/"
+        + "_tt/"
         + min_max
         + "/s1/"
         + mix_name
@@ -177,7 +188,7 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
-        + "_vd/"
+        + "_tt/"
         + min_max
         + "/s2/"
         + mix_name
@@ -189,7 +200,7 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
-        + "_vd/"
+        + "_tt/"
         + min_max
         + "/mix/"
         + mix_name
@@ -263,14 +274,14 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
     if not os.path.exists(os.path.join(output_dir, save_fs)):
         os.mkdir(os.path.join(output_dir, save_fs))
 
-    log_dir = os.path.join(output_dir, save_fs + "_vd/mixture_definitions_log")
+    log_dir = os.path.join(output_dir, save_fs + "_tt/mixture_definitions_log")
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
 
     inner_folders = ["s1", "s2", "mix"]
     for min_max in min_maxs:
         save_dir = os.path.join(
-            output_dir, save_fs + "_vd/" + min_max
+            output_dir, save_fs + "_tt/" + min_max
         )
 
         if not os.path.exists(save_dir):
@@ -281,7 +292,7 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
                 os.mkdir(os.path.join(save_dir, inner_folder))
 
         TaskFile = os.path.join(
-            filedir, "dataset", "mix_2_spk_vd.txt"
+            filedir, "dataset", "mix_2_spk_tt.txt"
         )
         Source1File, Source2File, MixFile, C = arrange_task_files(
             TaskFile, min_max, log_dir
@@ -402,7 +413,7 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
                         output_dir
                         + "/"
                         + save_fs
-                        + "_vd/"
+                        + "_tt/"
                         + min_max
                         + "/scaling.pkl",
                         "wb",
@@ -410,3 +421,31 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
                 )
             else:
                 raise ValueError("Incorrect sampling frequency for saving")
+
+if __name__ == '__main__' :
+    root_path = os.getcwd()
+    root_path = root_path.split("/")
+    root_path = "/".join(root_path[:-2])
+
+    data_path = os.path.join(root_path, 'dataset', 'vivos', 'train', 'waves')
+    log_path = os.path.join(root_path, 'dataset', 'mix_2_spk_tt.txt')
+
+    mix_path = os.path.join(root_path, 'dataset', 'vivos', 'mix_wav')
+    if not os.path.exists(mix_path):
+        os.mkdir(mix_path)
+
+    spks = os.listdir(data_path)
+    with open(log_path, "w") as fid:
+        for s1 in tqdm.tqdm(spks):
+            spks.remove(s1)
+            s1_wavs = os.listdir(os.path.join(data_path, s1))
+            for i in tqdm.tqdm(range(10)) :
+                s1_path = os.path.join(data_path, s1, s1_wavs[i])
+                s1_wav = load_wav(s1_path)
+                s1_snr = signaltonoise(s1_wav)
+                for s2 in tqdm.tqdm(spks):
+                    s2_wavs = os.listdir(os.path.join(data_path, s2))
+                    s2_path = os.path.join(data_path, s2, s2_wavs[i])
+                    s2_wav = load_wav(s2_path)
+                    s2_snr = signaltonoise(s2_wav)
+                    fid.write("{} {} {} {}\n".format(s1_path, s1_snr, s2_path, s2_snr))

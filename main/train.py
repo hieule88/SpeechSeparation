@@ -487,12 +487,6 @@ def dataio_prep(hparams):
         replacements={"data_root": hparams["data_folder"]},
     )
 
-    # test_data = sb.dataio.dataset.DynamicItemDataset.from_csv(
-    #     csv_path=hparams["test_data"],
-    #     replacements={"data_root": hparams["data_folder"]},
-    # )
-
-    # datasets = [train_data, valid_data, test_data]
     datasets = [train_data, valid_data]
 
     # 2. Provide audio pipelines
@@ -637,17 +631,6 @@ if __name__ == "__main__":
         separator.reset_layer_recursively(module)
 
     if not hparams["test_only"]:
-        # Training
-        # run_on_main(
-        #     separator.fit,
-        #     kwargs = {
-        #         "epoch_counter": separator.hparams.epoch_counter,
-        #         "train_set": train_data,
-        #         "valid_set": valid_data,
-        #         "train_loader_kwargs": hparams["dataloader_opts"],
-        #         "valid_loader_kwargs": hparams["dataloader_opts"],
-        #     },
-        # )
         separator.fit(
             separator.hparams.epoch_counter,
             train_data,
@@ -655,7 +638,3 @@ if __name__ == "__main__":
             train_loader_kwargs=hparams["dataloader_opts"],
             valid_loader_kwargs=hparams["dataloader_opts"],
         )
-
-    # # Eval
-    # separator.evaluate(test_data, min_key="si-snr")
-    # separator.save_results(test_data)

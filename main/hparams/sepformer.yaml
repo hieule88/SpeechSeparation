@@ -15,7 +15,7 @@ data_folder: /home/SpeechSeparation/dataset
 # wsj0_tr: /yourpath/wsj0-processed/si_tr_s/
 
 experiment_name: sepformer
-output_folder: /home/SpeechSeparation/dataset/output_folder
+output_folder: !ref <data_folder>/output_folder
 train_log: !ref <output_folder>/train_log.txt
 save_folder: !ref <output_folder>/save
 train_data: !ref <save_folder>/zalo.csv
