@@ -1,9 +1,9 @@
 from flask import Flask, request, render_template, send_file
-import flask
 import utils 
 import torchaudio
 import os 
-import zipfile
+import torch.nn.functional as F
+import numpy as np
 # khoi tao model
 global model 
 
@@ -14,50 +14,38 @@ app = Flask(__name__)
 
 # Khai báo các route 1 cho API
 
-@app.route('/')
-def upload_form():
-	return render_template('upload_templates/upload.html', audio_path = 'select file to predict!')
-
-@app.route('/separate', methods=['POST'])
-def get_prediction():
-    print('SEPARATE MODE')
-    dns_home = "/home/SpeechSeparation"
-    #dns_home = "/home/hieule/DeepDenoise"
-    if request.method == 'POST':
-        _file = request.files['file']
-        if _file.filename == '':
-            return upload_form()
-        print('\n\nfile uploaded:',_file.filename) 
-        _file.save(os.path.join(dns_home,'static/upload', _file.filename)) 
-        print('Write file success!')
-
-        separated = utils._process(os.path.join(dns_home,'static/upload',_file.filename), model)
-
-        zipfolder = zipfile.ZipFile(os.path.join(dns_home,'static/upload', 'Audiofiles.zip')
-                                    ,'w', compression = zipfile.ZIP_STORED)
-
-        for i in range(2):
-            signal = separated[0, :, i]
-            signal = signal / signal.abs().max()
-            torchaudio.save(os.path.join(dns_home, 'static/separated',_file.filename + '_Speaker_' + str(i+1)), 
-                                signal.unsqueeze(0).cpu(), sample_rate = 16000)
-            zipfolder.write(os.path.join(dns_home, 'static/separated',_file.filename + '_Speaker_' + str(i+1)))
-        zipfolder.close() 
+@app.route("/", methods=["GET","POST"])
+def index():
+    if request.method == "GET":
+        return render_template("upload.html")
+    else:
+        file1 = request.files["file1"]
+        file2 = request.files["file2"]
+        # print(file1, file2)
+        dns_home = "/home/SpeechSeparation"
         
-        os.remove(os.path.join(dns_home,'static/upload',_file.filename))
-        os.remove(os.path.join(dns_home, 'static/separated',_file.filename + '_Speaker_1'))
-        os.remove(os.path.join(dns_home, 'static/separated',_file.filename + '_Speaker_2'))
+        s1_path = os.path.join(dns_home,'static/upload') + file1.filename
+        s2_path = os.path.join(dns_home,'static/upload') + file2.filename
+        # luu file
+        file1.save(s1_path)
+        file2.save(s2_path)
 
-        print('Done')        
-        try :
-            return send_file(os.path.join(dns_home,'static/upload', 'Audiofiles.zip'),
-                            mimetype = 'zip',
-                            attachment_filename= 'Audiofiles.zip',
-                            as_attachment = True)
-        except Exception as e:
-            return str(e)
+        mix = utils.prepare_mixed(s1_path, s2_path)
 
-        os.remove(os.path.join(dns_home,'static/upload', 'Audiofiles.zip'))
+        mixed_filepath = os.path.join(dns_home,'static/upload', 'mixed_wav.wav')
+
+        torchaudio.save(mixed_filepath, mix.unsqueeze(0), sample_rate= 16000)
+
+        separated = utils._process(mixed_filepath, model)
+        
+        out_file1_path = os.path.join(dns_home,'static/upload', 'speaker1.wav')
+        out_file2_path = os.path.join(dns_home,'static/upload', 'speaker2.wav')
+
+        torchaudio.save(out_file1_path, separated[:, :, 0].unsqueeze(0), sample_rate= 16000)
+        torchaudio.save(out_file2_path, separated[:, :, 1].unsqueeze(0), sample_rate= 16000)
+        
+        return render_template("upload.html", mixed_filepath=mixed_filepath, out_file1_path=out_file1_path, out_file2_path=out_file2_path)
+
 if __name__ == "__main__":
     print("App run!")
 

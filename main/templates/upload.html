@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        html, body {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h3>Speech Separation</h3>
+    <form action="/" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file1" id="file1">
+        <input type="file" name="file2" id="file2">
+        <p>
+            <button type="submit">Process</button>
+        </p>
+    </form>
+
+    {% if mixed_filepath != none %}
+        <h5>Audio mixed</h5>
+        <audio src="{{mixed_filepath}}" autoplay controls></audio>
+        <h5>Speaker 1</h5>
+        <audio src="{{out_file1_path}}" controls></audio>
+        <h5>Speaker 2</h5>
+        <audio src="{{out_file2_path}}" controls></audio>
+    {% endif %}
+</body>
+</html>

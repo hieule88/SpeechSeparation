@@ -7,7 +7,6 @@ import csv
 import torchaudio
 import os
 import numpy as np
-from numpy.lib.npyio import load
 import librosa
 import tqdm
 
