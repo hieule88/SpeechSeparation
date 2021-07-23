@@ -23,8 +23,8 @@ def padding(wav, max_len):
     wav_padding = F.pad(input=wav, pad=(0,res), mode='constant', value=0)
     return wav_padding
 
-def _process(file_wav, model):
-    wav = load_wav(file_wav)
+def _process(file_dir, model):
+    wav = load_wav(file_dir)
     wav = torch.FloatTensor(wav)
     wav = wav.unsqueeze(0)
     num_wav = torch.Tensor((2))
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     # wav_file = s3+s1_2
     model = _load_model()
     # torchaudio.save("/home/SpeechSeparation/test_wav/mix_3_speakers.wav" , wav_file.unsqueeze(0), 16000)
-    wav_file = "/home/SpeechSeparation/test_wav/text.wav"
+    wav_file = "/home/SpeechSeparation/test_wav/mix_3_speakers.wav"
     separated = _process(wav_file, model)
     signal = separated[0, :, 0]
     signal = signal / signal.abs().max()

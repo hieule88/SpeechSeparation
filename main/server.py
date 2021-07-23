@@ -4,9 +4,11 @@ import torchaudio
 import os 
 import torch.nn.functional as F
 import numpy as np
+from mps_storage import MPS
 # khoi tao model
 global model 
 
+mps_upload = MPS()
 model = None
 
 # khoi tao flask app
@@ -26,25 +28,35 @@ def index():
         
         s1_path = os.path.join(dns_home,'static/upload') + file1.filename
         s2_path = os.path.join(dns_home,'static/upload') + file2.filename
+
+        file1_name = file1.filename.split('.')[-2]
+        file2_name = file2.filename.split('.')[-2]
+        mix_name = file1_name + '_' + file2_name
+        
         # luu file
         file1.save(s1_path)
         file2.save(s2_path)
 
         mix = utils.prepare_mixed(s1_path, s2_path)
 
-        mixed_filepath = os.path.join(dns_home,'static/upload', 'mixed_wav.wav')
+        mixed_filepath = os.path.join(dns_home,'static/upload', mix_name + '.wav')
 
         torchaudio.save(mixed_filepath, mix.unsqueeze(0), sample_rate= 16000)
 
         separated = utils._process(mixed_filepath, model)
         
-        out_file1_path = os.path.join(dns_home,'static/upload', 'speaker1.wav')
-        out_file2_path = os.path.join(dns_home,'static/upload', 'speaker2.wav')
+        out_file1_path = os.path.join(dns_home,'static/upload', mix_name + '_speaker1.wav')
+        out_file2_path = os.path.join(dns_home,'static/upload', mix_name + '_speaker2.wav')
+
+        mix_dir = mps_upload.upload(mixed_filepath)
+        spk1_dir = mps_upload.upload(out_file1_path)
+        spk2_dir = mps_upload.upload(out_file2_path)
+
 
         torchaudio.save(out_file1_path, separated[:, :, 0].unsqueeze(0), sample_rate= 16000)
         torchaudio.save(out_file2_path, separated[:, :, 1].unsqueeze(0), sample_rate= 16000)
         
-        return render_template("upload.html", mixed_filepath=mixed_filepath, out_file1_path=out_file1_path, out_file2_path=out_file2_path)
+        return render_template("upload.html", mixed_filepath=mix_dir, out_file1_path=spk1_dir, out_file2_path=spk2_dir)
 
 if __name__ == "__main__":
     print("App run!")
