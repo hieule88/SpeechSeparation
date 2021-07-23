@@ -102,6 +102,7 @@ if __name__ == "__main__":
 
     # Data preparation
     import prepare_test
+    # prepare_test.get_wsj_files(hparams["data_folder"])
     run_on_main(
         prepare_test.prepare_wsjmix,
         kwargs={

@@ -254,8 +254,8 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    if not os.path.exists(os.path.join(output_dir, save_fs)):
-        os.mkdir(os.path.join(output_dir, save_fs))
+    if not os.path.exists(os.path.join(output_dir, save_fs + '_tt')):
+        os.mkdir(os.path.join(output_dir, save_fs + '_tt'))
 
     log_dir = os.path.join(output_dir, save_fs + "_tt/mixture_definitions_log")
     if not os.path.exists(log_dir):
@@ -280,7 +280,7 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
         Source1File, Source2File, MixFile, C = arrange_task_files(
             TaskFile, min_max, log_dir
         )
-
+ 
         fid_s1 = open(Source1File, "w")
         fid_s2 = open(Source2File, "w")
         fid_m = open(MixFile, "w")
@@ -288,7 +288,7 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
         num_files = len(C)
         print("{} \n".format(min_max))
 
-        for i, line in tqdm(enumerate(C)):
+        for i, line in tqdm.tqdm(enumerate(C)):
 
             inwav1_name = line[0].split("/")[-1]
             inwav2_name = line[2].split("/")[-1]

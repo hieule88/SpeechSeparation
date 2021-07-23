@@ -5,7 +5,7 @@ import sys
 import speechbrain as sb
 from hyperpyyaml import load_hyperpyyaml
 from train import Separation
-
+import torchaudio
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
 
 def load_wav(path, sr=16000):
@@ -45,23 +45,23 @@ def _load_model():
 
     return model
 
-# if __name__ == "__main__":
-#     s3 = load_wav("/home/SpeechSeparation/test_wav/noise.wav")
-#     s1_2 = load_wav("/home/SpeechSeparation/test_wav/mix.wav")
-#     print(s3.shape)
-#     print(s1_2.shape)
+if __name__ == "__main__":
+    # s3 = load_wav("/home/SpeechSeparation/test_wav/noise.wav")
+    # s1_2 = load_wav("/home/SpeechSeparation/test_wav/mix.wav")
+    # print(s3.shape)
+    # print(s1_2.shape)
     
-#     s3 = s3[300:300 + s1_2.shape[0]]
-#     s3 = s3
-#     wav_file = s3+s1_2
-#     model = _load_model()
-#     torchaudio.save("/home/SpeechSeparation/test_wav/mix_3_speakers.wav" , wav_file.unsqueeze(0), 16000)
-#     wav_file = "/home/SpeechSeparation/test_wav/mix_3_speakers.wav"
-#     separated = _process(wav_file, model)
-#     signal = separated[0, :, 0]
-#     signal = signal / signal.abs().max()
-#     torchaudio.save("/home/SpeechSeparation/test_wav/mix_spk1.wav" , signal.unsqueeze(0).cpu(), 16000)
-#     signal = separated[0, :, 1]
-#     signal = signal / signal.abs().max()
-#     torchaudio.save("/home/SpeechSeparation/test_wav/mix_spk2.wav" , signal.unsqueeze(0).cpu(), 16000)
+    # s3 = s3[300:300 + s1_2.shape[0]]
+    # s3 = s3
+    # wav_file = s3+s1_2
+    model = _load_model()
+    # torchaudio.save("/home/SpeechSeparation/test_wav/mix_3_speakers.wav" , wav_file.unsqueeze(0), 16000)
+    wav_file = "/home/SpeechSeparation/test_wav/text.wav"
+    separated = _process(wav_file, model)
+    signal = separated[0, :, 0]
+    signal = signal / signal.abs().max()
+    torchaudio.save("/home/SpeechSeparation/test_wav/mix_spk1.wav" , signal.unsqueeze(0).cpu(), 16000)
+    signal = separated[0, :, 1]
+    signal = signal / signal.abs().max()
+    torchaudio.save("/home/SpeechSeparation/test_wav/mix_spk2.wav" , signal.unsqueeze(0).cpu(), 16000)
 
