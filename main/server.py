@@ -6,6 +6,7 @@ import torch.nn.functional as F
 import numpy as np
 from mps_storage import MPS
 # khoi tao model
+import torch
 global model 
 
 mps_upload = MPS()
@@ -18,13 +19,19 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET","POST"])
 def index():
+    print("hihi")
     if request.method == "GET":
+        print("get")
         return render_template("upload.html")
     else:
+        device = torch.device('cuda')
+        print("post")
         file1 = request.files["file1"]
         file2 = request.files["file2"]
         # print(file1, file2)
         dns_home = "/home/SpeechSeparation"
+        print(file1)
+        print(file2)
         
         s1_path = os.path.join(dns_home,'static/upload') + file1.filename
         s2_path = os.path.join(dns_home,'static/upload') + file2.filename
@@ -40,7 +47,8 @@ def index():
         mix = utils.prepare_mixed(s1_path, s2_path)
 
         mixed_filepath = os.path.join(dns_home,'static/upload', mix_name + '.wav')
-
+        mix = torch.tensor(mix)
+        mix.to('cpu')
         torchaudio.save(mixed_filepath, mix.unsqueeze(0), sample_rate= 16000)
 
         separated = utils._process(mixed_filepath, model)
@@ -49,20 +57,23 @@ def index():
         out_file2_path = os.path.join(dns_home,'static/upload', mix_name + '_speaker2.wav')
 
         mix_dir = mps_upload.upload(mixed_filepath)
+
+        print(separated.shape)
+
+        torchaudio.save(out_file1_path, separated[:, :, 0], sample_rate= 16000)
+        torchaudio.save(out_file2_path, separated[:, :, 1], sample_rate= 16000)
+
         spk1_dir = mps_upload.upload(out_file1_path)
         spk2_dir = mps_upload.upload(out_file2_path)
 
-
-        torchaudio.save(out_file1_path, separated[:, :, 0].unsqueeze(0), sample_rate= 16000)
-        torchaudio.save(out_file2_path, separated[:, :, 1].unsqueeze(0), sample_rate= 16000)
-        
         return render_template("upload.html", mixed_filepath=mix_dir, out_file1_path=spk1_dir, out_file2_path=spk2_dir)
 
 if __name__ == "__main__":
     print("App run!")
 
 	#load model
-    port = 5010
+    port = 5005
     host = '0.0.0.0'
     model = utils._load_model()    
-    app.run(debug=False, port = port, host= host, threaded=False)
+    print("load model done!")
+    app.run(debug=False, port = port, host=host)
