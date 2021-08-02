@@ -71,12 +71,7 @@ class Separation(sb.Brain):
 
         est_mask = self.hparams.MaskNet(mix_w)
        
-
-
         # LARGE PARAMS HERE
-    
-
-
 
         mix_w = torch.stack([mix_w] * self.hparams.num_spks)
         sep_h = mix_w * est_mask
@@ -578,26 +573,19 @@ if __name__ == "__main__":
     # Data preparation
     from prepare_data import prepare_wsjmix  # noqa
 
-    run_on_main(
-        prepare_wsjmix,
-        kwargs={
-            "datapath": hparams["data_folder"],
-            "savepath": hparams["save_folder"],
-            "n_spks": hparams["num_spks"],
-            "skip_prep": hparams["skip_prep"],
-        },
-    )
+    type = ['tr', 'vd']
+    for i in type:
+        run_on_main(
+            prepare_wsjmix,
+            kwargs={
+                "type": i,
+                "datapath": hparams["data_folder"],
+                "savepath": hparams["save_folder"],
+                "n_spks": hparams["num_spks"],
+                "skip_prep": hparams["skip_prep"],
+            },
+        )
 
-    import prepare_valid
-    run_on_main(
-        prepare_valid.prepare_wsjmix,
-        kwargs={
-            "datapath": hparams["data_folder"],
-            "savepath": hparams["save_folder"],
-            "n_spks": hparams["num_spks"],
-            "skip_prep": hparams["skip_prep"],
-        },
-    )
     # Create dataset objects
     if hparams["dynamic_mixing"]:
 

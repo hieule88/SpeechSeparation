@@ -2,13 +2,12 @@ import os
 import numpy as np
 from tqdm import tqdm
 from speechbrain.dataio.dataio import read_audio, write_audio
-from scipy.io import wavfile
 from scipy import signal
 import pickle
 import csv
 import torchaudio
 
-def prepare_wsjmix(datapath, savepath, n_spks=2, skip_prep=False):
+def prepare_wsjmix(type, datapath, savepath, n_spks=2, skip_prep=False):
     """
     Prepared wsj2mix if n_spks=2 and wsj3mix if n_spks=3.
 
@@ -22,13 +21,10 @@ def prepare_wsjmix(datapath, savepath, n_spks=2, skip_prep=False):
     if skip_prep:
         return
     if n_spks == 2:
-        create_wsj_csv(datapath, savepath)
-    if n_spks == 3:
-        create_wsj_csv_3spks(datapath, savepath)
-
+        create_wsj_csv(datapath, savepath, type)
 
 # load or create the csv files for the data
-def create_wsj_csv(datapath, savepath):
+def create_wsj_csv(datapath, savepath, type):
     """
     This function creates the csv files to get the speechbrain data loaders.
 
@@ -37,9 +33,9 @@ def create_wsj_csv(datapath, savepath):
         savepath (str) : path where we save the csv file
     """
     # tr: train; cv: valid; tt: test
-    mix_path = os.path.join(datapath, "wav16k" , "max", "mix/")
-    s1_path = os.path.join(datapath, "wav16k", "max", "s1/")
-    s2_path = os.path.join(datapath, "wav16k", "max", "s2/")
+    mix_path = os.path.join(datapath, "wav16k_" + type , "max", "mix/")
+    s1_path = os.path.join(datapath, "wav16k_" + type, "max", "s1/")
+    s2_path = os.path.join(datapath, "wav16k_" + type, "max", "s2/")
 
     # ten cac file trong mix,s1,s2 giong nhau
     files = os.listdir(mix_path)
@@ -62,7 +58,7 @@ def create_wsj_csv(datapath, savepath):
         "s2_wav_opts",
     ]
     # 
-    with open(savepath + "/zalo" + ".csv", "w") as csvfile:
+    with open(savepath + "/data_" + type + ".csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
         writer.writeheader()
         for i, (mix_path, s1_path, s2_path) in enumerate(
@@ -83,69 +79,6 @@ def create_wsj_csv(datapath, savepath):
                 "s2_wav_opts": None,
             }
             writer.writerow(row)
-
-
-def create_wsj_csv_3spks(datapath, savepath):
-    """
-    This function creates the csv files to get the speechbrain data loaders.
-    Arguments:
-        datapath (str) : path for the wsj0-mix dataset.
-        savepath (str) : path where we save the csv file
-    """
-    mix_path = os.path.join(datapath, "zalo3spk/mix/")
-    s1_path = os.path.join(datapath, "zalo2spk/s1/")
-    s2_path = os.path.join(datapath, "zalo3spk/s2/")
-    s3_path = os.path.join(datapath, "zalo3spk/s3/")
-
-    files = os.listdir(mix_path)
-
-    mix_fl_paths = [mix_path + fl for fl in files]
-    s1_fl_paths = [s1_path + fl for fl in files]
-    s2_fl_paths = [s2_path + fl for fl in files]
-    s3_fl_paths = [s3_path + fl for fl in files]
-
-    csv_columns = [
-        "ID",
-        "duration",
-        "mix_wav",
-        "mix_wav_format",
-        "mix_wav_opts",
-        "s1_wav",
-        "s1_wav_format",
-        "s1_wav_opts",
-        "s2_wav",
-        "s2_wav_format",
-        "s2_wav_opts",
-        "s3_wav",
-        "s3_wav_format",
-        "s3_wav_opts",
-    ]
-
-    with open(savepath + "/zalo_3spk"+ ".csv", "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-        writer.writeheader()
-        for i, (mix_path, s1_path, s2_path, s3_path) in enumerate(
-            zip(mix_fl_paths, s1_fl_paths, s2_fl_paths, s3_fl_paths)
-        ):
-
-            row = {
-                "ID": i,
-                "duration": 3.0,
-                "mix_wav": mix_path,
-                "mix_wav_format": "wav",
-                "mix_wav_opts": None,
-                "s1_wav": s1_path,
-                "s1_wav_format": "wav",
-                "s1_wav_opts": None,
-                "s2_wav": s2_path,
-                "s2_wav_format": "wav",
-                "s2_wav_opts": None,
-                "s3_wav": s3_path,
-                "s3_wav_format": "wav",
-                "s3_wav_opts": None,
-            }
-            writer.writerow(row)
-
 
 def save_mixture(
     s1,
@@ -229,6 +162,7 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
+        + "_" + type
         + "/"
         + min_max
         + "/s1/"
@@ -241,6 +175,7 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
+        + "_" + type
         + "/"
         + min_max
         + "/s2/"
@@ -253,6 +188,7 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
+        + "_" + type
         + "/"
         + min_max
         + "/mix/"
@@ -264,7 +200,7 @@ def save_mixture(
     return scaling, scaling16bit
 
 
-def arrange_task_files(TaskFile, min_max, log_dir):
+def arrange_task_files(type, TaskFile, min_max, log_dir):
     """
     This function gets the specifications on on what file to read
     and also opens the files for the logs.
@@ -285,18 +221,18 @@ def arrange_task_files(TaskFile, min_max, log_dir):
                 C.append(line.split())
 
     Source1File = os.path.join(
-        log_dir, "mix_2_spk_" + min_max + "_1"
+        log_dir, "mix_2_spk_" + type + "_" + min_max + "_1"
     )
     Source2File = os.path.join(
-        log_dir, "mix_2_spk_" + min_max + "_2"
+        log_dir, "mix_2_spk_" + type + "_" + min_max + "_2"
     )
     MixFile = os.path.join(
-        log_dir, "mix_2_spk_" + min_max + "_mix"
+        log_dir, "mix_2_spk_" + type + "_" + min_max + "_mix"
     )
     return Source1File, Source2File, MixFile, C
 
 
-def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
+def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
     """
     This function constructs the wsj0-2mix dataset out of wsj0 dataset.
     (We are assuming that we have the wav files and not the sphere format)
@@ -334,7 +270,7 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
     inner_folders = ["s1", "s2", "mix"]
     for min_max in min_maxs:
         save_dir = os.path.join(
-            output_dir, save_fs + "/" + min_max
+            output_dir, save_fs + "_" + type , min_max
         )
 
         if not os.path.exists(save_dir):
@@ -345,10 +281,10 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
                 os.mkdir(os.path.join(save_dir, inner_folder))
 
         TaskFile = os.path.join(
-            filedir, "dataset", "mix_2_spk.txt"
+            filedir, "dataset", "mix_2_spk_" + type + ".txt"
         )
         Source1File, Source2File, MixFile, C = arrange_task_files(
-            TaskFile, min_max, log_dir
+            type, TaskFile, min_max, log_dir
         )
 
         fid_s1 = open(Source1File, "w")
@@ -360,8 +296,8 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
 
         for i, line in tqdm(enumerate(C)):
 
-            inwav1_name = line[0].split("/")[-1]
-            inwav2_name = line[2].split("/")[-1]
+            inwav1_name = line[0].split("/")[-1].split('.')[0]
+            inwav2_name = line[2].split("/")[-1].split('.')[0]
 
             # write the log data to the log files
             fid_s1.write("{}\n".format(line[0]))
@@ -466,7 +402,7 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
                         output_dir
                         + "/"
                         + save_fs
-                        + "/"
+                        + "_" + type
                         + min_max
                         + "/scaling.pkl",
                         "wb",
@@ -483,4 +419,6 @@ if __name__ == "__main__":
     root = '/'.join(root[:-2])
     data_path = os.path.join(root, "dataset")
     print(data_path)
-    get_wsj_files(data_path)
+    type = ['tr', 'vd']
+    for i in type:
+        get_wsj_files(i, data_path)

@@ -61,7 +61,7 @@ def create_wsj_csv(datapath, savepath):
         "s2_wav_opts",
     ]
     # 
-    with open(savepath + "/zalo_vd" + ".csv", "w") as csvfile:
+    with open(savepath + "/data_vd" + ".csv", "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
         writer.writeheader()
         for i, (mix_path, s1_path, s2_path) in enumerate(
@@ -296,8 +296,8 @@ def get_wsj_files(output_dir, save_fs="wav16k", min_maxs=["max"]):
 
         for i, line in tqdm(enumerate(C)):
 
-            inwav1_name = line[0].split("/")[-1]
-            inwav2_name = line[2].split("/")[-1]
+            inwav1_name = line[0].split("/")[-1].split('.')[0]
+            inwav2_name = line[2].split("/")[-1].split('.')[0]
 
             # write the log data to the log files
             fid_s1.write("{}\n".format(line[0]))

@@ -18,9 +18,9 @@ experiment_name: sepformer
 output_folder: !ref <data_folder>/output_folder
 train_log: !ref <output_folder>/train_log.txt
 save_folder: !ref <output_folder>/save
-train_data: !ref <save_folder>/zalo.csv
-valid_data: !ref <save_folder>/zalo_vd.csv
-test_data: !ref <save_folder>/zalo_tt.csv
+train_data: !ref <save_folder>/data_tr.csv
+valid_data: !ref <save_folder>/data_vd.csv
+test_data: !ref <save_folder>/data_tt.csv
 skip_prep: False
 
 
