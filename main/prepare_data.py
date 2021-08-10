@@ -91,8 +91,10 @@ def save_mixture(
     lev2,
     save_fs,
     output_dir,
+    data_type,
     mix_name,
     i,
+
 ):
     """
     This function creates the mixtures, and saves them
@@ -157,12 +159,14 @@ def save_mixture(
     scaling16bit[i] = mix_scaling
     
     sampling_rate = 8000 if save_fs == "wav8k" else 16000
+    # print(output_dir, save_fs, min_max, mix_name) #, type(output_dir), type(save_fs), type(min_max), type(mix_name))
 
     write_audio(
         output_dir
         + "/"
         + save_fs
-        + "_" + type
+        + "_" 
+        + data_type
         + "/"
         + min_max
         + "/s1/"
@@ -175,7 +179,8 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
-        + "_" + type
+        + "_" 
+        + data_type
         + "/"
         + min_max
         + "/s2/"
@@ -188,7 +193,8 @@ def save_mixture(
         output_dir
         + "/"
         + save_fs
-        + "_" + type
+        + "_" 
+        + data_type
         + "/"
         + min_max
         + "/mix/"
@@ -200,7 +206,7 @@ def save_mixture(
     return scaling, scaling16bit
 
 
-def arrange_task_files(type, TaskFile, min_max, log_dir):
+def arrange_task_files(data_type, TaskFile, min_max, log_dir):
     """
     This function gets the specifications on on what file to read
     and also opens the files for the logs.
@@ -221,18 +227,18 @@ def arrange_task_files(type, TaskFile, min_max, log_dir):
                 C.append(line.split())
 
     Source1File = os.path.join(
-        log_dir, "mix_2_spk_" + type + "_" + min_max + "_1"
+        log_dir, "mix_2_spk_" + data_type + "_" + min_max + "_1"
     )
     Source2File = os.path.join(
-        log_dir, "mix_2_spk_" + type + "_" + min_max + "_2"
+        log_dir, "mix_2_spk_" + data_type + "_" + min_max + "_2"
     )
     MixFile = os.path.join(
-        log_dir, "mix_2_spk_" + type + "_" + min_max + "_mix"
+        log_dir, "mix_2_spk_" + data_type + "_" + min_max + "_mix"
     )
     return Source1File, Source2File, MixFile, C
 
 
-def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
+def get_wsj_files(data_type, output_dir, save_fs="wav16k", min_maxs=["max"]):
     """
     This function constructs the wsj0-2mix dataset out of wsj0 dataset.
     (We are assuming that we have the wav files and not the sphere format)
@@ -270,7 +276,7 @@ def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
     inner_folders = ["s1", "s2", "mix"]
     for min_max in min_maxs:
         save_dir = os.path.join(
-            output_dir, save_fs + "_" + type , min_max
+            output_dir, save_fs + "_" + data_type , min_max
         )
 
         if not os.path.exists(save_dir):
@@ -281,10 +287,10 @@ def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
                 os.mkdir(os.path.join(save_dir, inner_folder))
 
         TaskFile = os.path.join(
-            filedir, "dataset", "mix_2_spk_" + type + ".txt"
+            filedir, "dataset", "mix_2_spk_" + data_type + ".txt"
         )
         Source1File, Source2File, MixFile, C = arrange_task_files(
-            type, TaskFile, min_max, log_dir
+            data_type, TaskFile, min_max, log_dir
         )
 
         fid_s1 = open(Source1File, "w")
@@ -352,6 +358,7 @@ def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
                     lev2,
                     save_fs,
                     output_dir,
+                    data_type,
                     mix_name,
                     i,
                 )
@@ -370,6 +377,7 @@ def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
                     lev2,
                     save_fs,
                     output_dir,
+                    data_type,
                     mix_name,
                     i,
                 )
@@ -386,6 +394,8 @@ def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
                         output_dir
                         + "/"
                         + save_fs
+                        + "_" 
+                        + data_type
                         + "/"
                         + min_max
                         + "/scaling.pkl",
@@ -402,7 +412,9 @@ def get_wsj_files(type, output_dir, save_fs="wav16k", min_maxs=["max"]):
                         output_dir
                         + "/"
                         + save_fs
-                        + "_" + type
+                        + "_" 
+                        + data_type
+                        + "/"
                         + min_max
                         + "/scaling.pkl",
                         "wb",
@@ -419,6 +431,6 @@ if __name__ == "__main__":
     root = '/'.join(root[:-2])
     data_path = os.path.join(root, "dataset")
     print(data_path)
-    type = ['tr', 'vd']
-    for i in type:
+    data_type = ['tr', 'vd']
+    for i in data_type:
         get_wsj_files(i, data_path)
