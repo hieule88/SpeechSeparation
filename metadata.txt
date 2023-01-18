@@ -1,0 +1,14 @@
+﻿tập Dataset
+All: 8,7h
+Male: 16014s
+Female: 15322s 
+min: 0.43s
+max: 62.92s
+<1 : 
+
+tập test:
+All : 2h
+min: 0.5s
+max: 32s
+<1 :
+
