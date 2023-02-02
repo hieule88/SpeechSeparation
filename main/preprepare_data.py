@@ -32,25 +32,23 @@ for i in tqdm(range(len(speakers)), total= len(speakers)):
         s1 , fs = torchaudio.load(name)
         len_s = s1.shape[1] / fs
         cnt = cnt + len_s
-print(tr_tt_ratio)        
     # os.rename(speakers[i],newspeaker)    
 # FOR PUBLIC-TEST
-        # if len_s > 0.65:
-        #     if s1.shape[0] == 2:
-        #         s1 = s1.mean(axis=0)
-        #         s1 = torch.unsqueeze(s1, 0)
+        if len_s > 0.65:
+            if s1.shape[0] == 2:
+                s1 = s1.mean(axis=0)
+                s1 = torch.unsqueeze(s1, 0)
                 
-        #     if len_s > 3 :
-        #         num_rep = int((len_s // 3) +  1)
-        #         for rep in range(num_rep):
-        #             start = rep * fs * 3
-        #             end = (rep + 1) * fs * 3 if (rep + 1) * 3 < len_s else None
-        #             data_frame = s1[ :, start : end ]
-        #             torchaudio.save(os.path.join(speakers[i], spec_name) + '*' + str(rep) + '.wav', data_frame, fs)
-        #     else:
-        #         torchaudio.save(os.path.join(speakers[i], spec_name) + '*.wav', s1, fs)
+            if len_s > 3 :
+                num_rep = int((len_s // 3) +  1)
+                for rep in range(num_rep):
+                    start = rep * fs * 3
+                    end = (rep + 1) * fs * 3 if (rep + 1) * 3 < len_s else None
+                    data_frame = s1[ :, start : end ]
+                    torchaudio.save(os.path.join(speakers[i], spec_name) + '*' + str(rep) + '.wav', data_frame, fs)
+            else:
+                torchaudio.save(os.path.join(speakers[i], spec_name) + '*.wav', s1, fs)
 
 
-    # exit(0)
     # torchaudio.save(os.path.join(root_path,'temp_0.wav'), torch.unsqueeze(s1[0], 0), _)
     # torchaudio.save(os.path.join(root_path,'temp_1.wav'), torch.unsqueeze(s1[1], 0), _)

@@ -8,7 +8,7 @@ __set_seed: !apply:torch.manual_seed [!ref <seed>]
 
 # e.g. '/yourpath/wsj0-mix/2speakers'
 # end with 2speakers for wsj0-2mix or 3speakers for wsj0-3mix
-data_folder: /home/SpeechSeparation/dataset
+data_folder: /home/hieule/SpeechSeparation/dataset
 
 # the path for wsj0/si_tr_s/ folder -- only needed if dynamic mixing is used
 # e.g. /yourpath/wsj0-processed/si_tr_s/

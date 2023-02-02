@@ -6,3 +6,5 @@ pyyaml
 packaging
 joblib
 scipy
+librosa
+matplotlib

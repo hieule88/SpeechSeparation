@@ -23,7 +23,6 @@ class Separation(sb.Brain):
         """Forward computations from the mixture to the separated signals."""
 
         # Unpack lists and put tensors in the right device
-
         mix, mix_lens = mix
         mix, mix_lens = mix.to(self.device), mix_lens.to(self.device)
 
